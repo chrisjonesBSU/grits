@@ -135,6 +135,7 @@ class CG_Compound(Compound):
         """Set the mapping attribute."""
         particle_ids = np.array([id(p) for p in self.atomistic.particles()])
         matches = []
+        added_hydrogens = 0
         for bead_name, smart_str in beads.items():
             smarts = pybel.Smarts(smart_str)
             if not smarts.findall(mol):
@@ -149,6 +150,7 @@ class CG_Compound(Compound):
                                 np.where(particle_ids == id(particle))[0][0]
                             )
                             _group.append(h_idx)
+                            added_hydrogens += 1
                 group = tuple(_group)
                 matches.append((group, smart_str, bead_name))
 
@@ -176,7 +178,7 @@ class CG_Compound(Compound):
                     mapping[f"{name}...{smarts}"].append(group)
 
         n_atoms = mol.OBMol.NumHvyAtoms()
-        if n_atoms != len(seen):
+        if n_atoms != len(seen) + added_hydrogens:
             warn("Some atoms have been left out of coarse-graining!")
             # TODO make this more informative
         self.mapping = mapping
