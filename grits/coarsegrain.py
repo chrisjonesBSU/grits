@@ -667,7 +667,7 @@ class CG_System:
             json.dump(self.mapping, f, cls=NumpyEncoder)
         print(f"Mapping saved to {filename}")
 
-    def save(self, cg_gsdfile, start=0, stop=None):
+    def save(self, cg_gsdfile, add_images, start=0, stop=None, stride=1):
         """Save the coarse-grain system to a gsd file.
 
         Does not calculate the image of the coarse-grain bead.
@@ -682,12 +682,28 @@ class CG_System:
         cg_gsdfile : str
             Filename for new gsd file. If file already exists, it will be
             overwritten.
+        add_images : bool, required
+            If True, coarse-grained particle images are set
+            using freud.box.Box.get_images.
+            If False, all coarse-grained particle images are set to [0, 0, 0]
         start : int, default 0
             Where to start reading the gsd trajectory the system was created
             with.
         stop : int, default None
             Where to stop reading the gsd trajectory the system was created
             with. If None, will stop at the last frame.
+        stride : int, default 1
+            The stride to use when iterating from [start:stop]
+
+        Note
+        ----
+        If you want to perform dynamics-related analysis such as
+        calculating the mean-square-diplacement of the coarse-grained
+        trajectory, set add_images = True.
+        If you want to use a gsd.hoomd.Frame from the coarse-grained
+        trajectory as the initial state for a coarse-grained simulation,
+        set add_images = False.
+
         """
         typeid = []
         types = [i.split("...")[0] for i in self.mapping]
@@ -722,7 +738,7 @@ class CG_System:
         ) as old:
             # stop being None is fine; slicing [0:None] gives whole array,
             # even in edge case where there's only one or two frames
-            for s in old[start:stop]:
+            for s in old[start:stop:stride]:
                 new_snap = gsd.hoomd.Frame()
                 position = []
                 mass = []
@@ -754,7 +770,10 @@ class CG_System:
                     orientation = np.vstack(orientation)
                     new_snap.particles.orientation = orientation
                 position = np.vstack(position)
-                images = f_box.get_images(position)
+                if add_images:
+                    images = f_box.get_images(position)
+                else:
+                    images = np.array([[0,0,0] for i in position])
                 position = f_box.wrap(position)
 
                 new_snap.configuration.box = s.configuration.box
