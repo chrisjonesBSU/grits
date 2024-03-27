@@ -292,9 +292,7 @@ class CG_Compound(Compound):
         print(f"Mapping saved to {filename}")
         return filename
 
-    def visualize(
-        self, show_ports=False, color_scheme={}, show_atomistic=False, scale=1.0
-    ):  # pragma: no cover
+    def visualize(self, color_scheme={}, show_atomistic=False, scale=1.0):  # pragma: no cover
         """Visualize the Compound using py3dmol.
 
         Allows for visualization of a Compound within a Jupyter Notebook.
@@ -303,8 +301,6 @@ class CG_Compound(Compound):
 
         Parameters
         ----------
-        show_ports : bool, default False
-            Visualize Ports in addition to Particles
         color_scheme : dict, default {}
             Specify coloring for non-elemental particles keys are strings of
             the particle names values are strings of the colors::
@@ -362,7 +358,6 @@ class CG_Compound(Compound):
         if atom_names:
             atomistic.save(
                 os.path.join(tmp_dir, "atomistic_tmp.mol2"),
-                show_ports=show_ports,
                 overwrite=True,
             )
 
